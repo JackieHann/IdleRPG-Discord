@@ -1,0 +1,22 @@
+{
+  "name": "idlerpg-discord",
+  "version": "1.0.0",
+  "description": "Prototype for a discord bot :)",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JackieHann/IdleRPG-Discord.git"
+  },
+  "author": "Jake",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JackieHann/IdleRPG-Discord/issues"
+  },
+  "homepage": "https://github.com/JackieHann/IdleRPG-Discord#readme",
+  "dependencies": {
+    "discord.js": "^11.3.2"
+  }
+}
