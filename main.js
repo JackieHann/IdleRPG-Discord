@@ -19,20 +19,55 @@ bot.on("message", async message =>
     if (message.author.bot) return;
     if (message.channel.type === "dm") return;
 
-    //Prefix we are looking for is a backslash
-    let prefix = botconfig.prefix;
+    
+    let prefix = botconfig.prefix;                  //Prefix we are looking for is a backslash
+    let messageArr = message.content.split(" ");    //message is stored in an array separated by spaces
+    let command = messageArr[0];                    //Command is the fist bit of the message
+    let params = messageArr.slice(1);               //Params are anything after first bit of message
 
-    //message is stored in an array separated by spaces
-    let messageArr = message.content.split(" ");
+    //EG of use:
+    //if (command === `${prefix}test`)
+    //{
+    //    return message.channel.send("You requested a test with parameters: " + params);
+    //};
 
-    //Command is the fist bit of the message
-    let command = messageArr[0];
-
-    let params = messageArr.slice(1);
-
-    if (command === `${prefix}test`)
+    //If prefix has been used, treat it as a command
+    if (command.charAt(0) === prefix)
     {
-        return message.channel.send("You requested a test with parameters: " + params);
+        console.log(message.author.username + ` attempted command: ` + command);
+        command = command.slice(1);
+        
+        if(command === `info`)
+        {
+            let pInfo = new Discord.RichEmbed();
+
+            pInfo.setDescription("Character Information");
+            pInfo.setColor("#ffa500");
+            pInfo.setThumbnail(message.author.displayAvatarURL);
+            pInfo.addField("Name: ", message.author.username, true);
+            pInfo.addField("Class: ", "testClass", true);
+            pInfo.addField("Level: ", "1", true)
+            pInfo.addField("Exp: ", "0", true);
+            
+    
+            return message.channel.send(pInfo);
+        }
+        else if(command === `botinfo`)
+        {
+            let bInfo = new Discord.RichEmbed();
+            bInfo.setDescription("Bot Information");
+            bInfo.setColor("#15f629");
+            bInfo.setThumbnail(bot.user.displayAvatarURL);
+            bInfo.addField("Bot Name", bot.user.username);
+            bInfo.addField("Created On", bot.user.createdAt);
+
+            return message.channel.send(bInfo);
+        }
+        else
+        {
+            return message.channel.send("Invalid Command!");
+        }
+
     };
 
 });
