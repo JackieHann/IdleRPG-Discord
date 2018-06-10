@@ -54,12 +54,12 @@ bot.on("ready", async() =>
 bot.on("message", async message =>
 {
 
-    //If the message came from the bot, dont do anything duh
+    //If the message came from the bot, or is a dm, dont do anything duh
     if (message.author.bot) return;
     if (message.channel.type === "dm") return;
 
     
-    let prefix = botconfig.prefix;                  //Prefix we are looking for is a backslash
+    let prefix = botconfig.prefix;                  //Prefix we are looking for is a exclamation
     let messageArr = message.content.split(" ");    //message is stored in an array separated by spaces
     let command = messageArr[0];                    //Command is the fist bit of the message
     let params = messageArr.slice(1);               //Params are anything after first bit of message
