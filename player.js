@@ -1,6 +1,16 @@
 const Discord = require("discord.js");
 //var bot;
 
+function enemy() 
+{
+    this.name = enemyNames.Chicken;
+    this.level = 1;
+    this.maxHP = 10;
+    this.currHP = this.maxHP;
+    this.maxDmg = 2;
+    this.minDmg = 1;
+    this.dropRate = 100;
+}
 
 var actions = 
             {   
@@ -43,13 +53,25 @@ class player
     {
         this.id = ID;
         this.name = nickname;
+
         this.level = 1;
         this.currExp = 0;
         this.nextLevelExp = 50;
+
         this.gold = 0;
+
+        this.maxHP = 10;
+        this.currHP = this.maxHP;
+
+        this.maxDmg = 5;
+        this.minDmg = 1;
+
         this.currAction = actions.Idling;
         this.location = locations.Town;
-        this.currEnemy = enemyNames.Chicken;
+
+        this.currEnemy = new enemy();
+
+        this.playersTurn = true;
     };
 
     progress()
@@ -60,27 +82,56 @@ class player
             //Change to travelling
             case actions.Idling:
                 this.startTravelling();
-                msg += "Travelling to " + this.getLocationName(this.location);
+                msg = "**" + this.name + "** is travelling to " + this.getLocationName(this.location);
                 break;
             case actions.Travelling:
                 this.startSeaching();
-                msg += "Searching around";
+                msg += "**" +this.name + "** is searching around for Enemies";
                 break; 
             case actions.Searching:
                 this.startBattling();
-                msg += "Battling a " + this.getEnemyName(this.currEnemy);
+                msg = "<@" + this.id + "> Started a battle with **" + this.getEnemyName(this.currEnemy.name) + " [ Lv " + this.currEnemy.level + " ]**";
+//
                 break;  
             case actions.Battling:
-                this.startLooting();
-                msg = "Looting";
+                if (this.currEnemy.currHP === 0)
+                {
+                    //YOu killed the enemy yahoo
+                    let expGained = this.currEnemy.maxHP * this.currEnemy.maxDmg * 0.5;
+                    this.currExp += expGained;
+                    let goldGained = Math.floor(Math.random() * (this.currEnemy.maxDmg * this.currEnemy.maxHP)) + 1;
+                    this.gold += goldGained;
+
+                    this.startLooting();
+                    msg = "<@" + this.id + "> ***Won*** his battle against **" + this.getEnemyName(this.currEnemy.name) + " [lvl" +this.currEnemy.level + "]** "  + "and gained **[ " + expGained + "exp ][ " + goldGained + "gold ]** \n And then started looting the corpse..";
+                    
+                }
+                else if (this.currHP === 0)
+                {
+                    msg = "<@" + this.id +"> ***Failed*** to kill his enemy...";
+                    this.startReturning();
+                }
+                else if (this.playersTurn)
+                {
+                    
+                    //attack enemy
+                    this.attackEnemy();
+                    this.playersTurn = false;
+                }
+                else
+                {
+                    //attack player
+                    this.attackPlayer();
+                    this.playersTurn = true;
+                }
                 break;  
             case actions.Looting:
                 this.startReturning();
-                msg = "Returning to Town";
+                msg = "**" + this.name + "** is returning back to Town";
                 break;  
             case actions.Returning:
                 this.startIdling();
-                msg = "Idling in Town";
+                msg = "**" + this.name + "** is idling in the Town";
                 break;  
         }
         return msg;
@@ -144,15 +195,15 @@ class player
 
     startBattling()
     {
-        let newEnemyID = Math.floor(Math.random() * Object.keys(enemyNames).length)
-        this.currEnemy = newEnemyID;
+        //Make new enemy
+        this.setupEnemy();
+        //reset players stats
+        this.resetStats();
         this.currAction = actions.Battling;
     };
 
     startLooting()
     {
-        this.currExp += 25;
-        this.gold += 50;
         this.currAction = actions.Looting;
     };
 
@@ -166,6 +217,68 @@ class player
         this.location = 0;
         this.currAction = actions.Idling;
     };
+
+    //Battle functions
+    setupEnemy()
+    {
+        console.log("Setting up enemy..")
+        //Random name
+        this.currEnemy.name = Math.floor(Math.random() * Object.keys(enemyNames).length);
+
+        //How higher the enemy will be than you.
+        let levelInc = Math.floor(Math.random() * 3);
+        //Set enemy level
+        this.currEnemy.level = this.level + levelInc;
+
+        //Set enemy hp based on level
+        this.currEnemy.maxHP = this.currEnemy.level * 5;
+        this.currEnemy.currHP = this.currEnemy.maxHP;
+
+        this.maxDmg = this.currEnemy.level * 0.5 * this.currEnemy.maxHP;
+        this.currEnemy.minDmg = this.currEnemy.level;
+        
+        //Will be random, or based on hp later
+        this.currEnemy.dropRate = 100;
+    
+    };
+    resetStats()
+    {
+        console.log("Resetting player stats..")
+        //Reset hp
+        this.currHP = this.maxHP;
+        this.playersTurn = true;
+        //Reset dmg (buffed?)
+    };
+
+    attackEnemy()
+    {
+        console.log("Attacking enemy..")
+        let damageDealt = (Math.floor(Math.random() * (this.maxDmg - this.minDmg + 1)))+ this.minDmg;
+        console.log("Dealt " + damageDealt + " to enemy");
+        
+        this.currEnemy.currHP -= damageDealt;
+        console.log(this.currEnemy.currHP);
+
+        if(this.currEnemy.currHP <= 0)
+        {
+            this.currEnemy.currHP = 0;
+        }
+    }
+
+    attackPlayer()
+    {
+        console.log("Attacking player..")
+        let damageDealt = (Math.floor(Math.random() * (this.currEnemy.maxDmg - this.currEnemy.minDmg + 1)))+ this.currEnemy.minDmg;
+        console.log("Enemy dealt " + damageDealt + " to player");
+        this.currHP -= damageDealt;
+
+        if(this.currHP <= 0)
+        {
+            this.currHP = 0;
+        }
+
+        
+    }
 }
 
 
