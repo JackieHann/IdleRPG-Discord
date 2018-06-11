@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 const FileSystem = require("fs");
-//var player = require("./../player.js");
+var player = require("./../player.js");
 
 module.exports.run = async (bot, message, params) => {
 
@@ -10,7 +10,7 @@ module.exports.run = async (bot, message, params) => {
 
     if(players[message.author.id])
     {
-        character = players[message.author.id];
+        character = Object.setPrototypeOf(players[message.author.id], player.prototype);
 
         pInfo.setDescription("Character Information");
         pInfo.setColor("#ffa500");
@@ -18,7 +18,8 @@ module.exports.run = async (bot, message, params) => {
         pInfo.addField("Name: ", character.name, true);
         pInfo.addField("Class: ", "testClass", true);
         pInfo.addField("Level: ", character.level, true)
-        pInfo.addField("Exp: ", character.currExp, true);
+        pInfo.addField("Exp: ", "[" + character.currExp + " / " + character.nextLevelExp + "]", true);
+        pInfo.addField("Location: ", character.getLocationName(character.location), true);
         pInfo.addField("Gold: ", character.gold, true);
         
     }

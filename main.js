@@ -48,6 +48,7 @@ bot.on("ready", async() =>
 {
     console.log(`${bot.user.username} is online!`);
     bot.user.setActivity("around with JS");
+    bot.channels.find("id", "455113318345211907").send("Oi Oi we back in business");
 });
 
 //Check for messages
@@ -100,12 +101,54 @@ bot.on("message", async message =>
 
 });
 
-//setInterval(function()
-//{
-//   bot.channels.find("id", "455113318345211907").send("Doing Something..");
-//    //bot.channel.send("working");
-//}, 3000);
+setInterval(function()
+{
+    action = Math.floor(Math.random() * 3);
+    
+    if (action != 0)
+    {
+        //All players
+        playerData = JSON.parse(FileSystem.readFileSync("./_Json/players.json", "utf8"));
+        playerArray = [];
 
+        //Amount of players
+        amountOfPlayers = 0;
+        for(var i in playerData)
+        {
+            playerArray.push(playerData[i]);
+            amountOfPlayers ++;
+        }
+        
+        //Pick a random player
+        let randomIndex = Math.floor(Math.random() * (amountOfPlayers));
+        let playerID = playerArray[randomIndex].id;
+
+        //Get that player
+        let thePlayer_ = Object.setPrototypeOf(playerData[playerID], player.prototype);
+
+        //Do something with that player
+        let didWhat = thePlayer_.progress();
+        bot.channels.find("id", "455113318345211907").send("<@" + playerID + "> is " + didWhat);
+
+        //Check if player levelled up
+        let levelledUp = thePlayer_.checkLevelUp();
+        if (levelledUp === true)
+            bot.channels.find("id", "455113318345211907").send("<@" + playerID + "> is now Lvl: " + thePlayer_.level + ". Next Lvl in " + (thePlayer_.nextLevelExp - thePlayer_.currExp) + " exp.");
+
+        //Overwrite players info with new info
+        playerData[playerID] = thePlayer_;
+        savePlayerData(playerData);
+    }    
+
+}, 3000);
+
+function savePlayerData(players)
+{
+            //Write player to file
+            FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err)=> {
+                if (err) console.log(err);
+            });
+}
 
 bot.login(botconfig.token);
 

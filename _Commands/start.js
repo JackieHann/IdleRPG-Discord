@@ -14,7 +14,7 @@ module.exports.run = async (bot, message, params) => {
     {
         
         //Make a player at that ID
-        players[message.author.id] = new player(message.author.username);
+        players[message.author.id] = new player(message.author.username, message.author.id);
         
         //Write player to file
         FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err)=> {
