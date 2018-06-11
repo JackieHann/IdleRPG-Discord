@@ -13,8 +13,10 @@ module.exports.run = async (bot, message, params) => {
     }
     else if(players[message.author.id])
     {
+
+        newName = params.join(" ").slice(0, 10);
         character = Object.setPrototypeOf(players[message.author.id], player.prototype);
-        character.changeName(params[0]);
+        character.changeName(newName);
     
         //save
         players[message.author.id] = character;
@@ -22,7 +24,7 @@ module.exports.run = async (bot, message, params) => {
         //Write player to file
         FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err)=> {
             if (err) console.log(err);
-            else return message.channel.send("Nickname set!");
+            else return message.channel.send("Nickname set to '" + newName + "' !");
         });
         
     }

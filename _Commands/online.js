@@ -1,17 +1,21 @@
 const Discord = require("discord.js");
+const FileSystem = require("fs");
+var player = require("./../player.js");
 
 module.exports.run = async (bot, message, params) => {
     
-    var str = "Currently Playing: ";
+    let players = JSON.parse(FileSystem.readFileSync("./_Json/players.json", "utf8"));
 
-            players.forEach(player => {
-                str += player.name;
-                str += ", ";
-            });
-            str += ".";
+    var str = "There is currently ";
+    let numOfPlayers = 0;
 
-            return message.channel.send(str)
+    for(var player in players){
+        numOfPlayers ++;
+    };
 
+    str += numOfPlayers;
+    str += " players currently active";
+    return message.channel.send(str);
 }
 
 module.exports.help =
