@@ -1,0 +1,12 @@
+{
+    "Chicken": 0,
+    "Goblin": 1,
+    "Cow": 2,
+    "Farmer": 3,
+    "Wizard": 4,
+    "Knight": 5,
+    "Bodyguard": 6,
+    "Squire": 7,
+    "Prince": 8,
+    "King": 9
+}

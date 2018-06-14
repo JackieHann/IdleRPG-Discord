@@ -1,0 +1,8 @@
+{
+    "Dagger": 0,
+    "Sword": 1,
+    "Glaive": 2,
+    "Wand": 3,
+    "Whip": 4,
+    "Staff": 5
+}

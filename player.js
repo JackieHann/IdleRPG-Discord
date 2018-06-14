@@ -1,56 +1,26 @@
 const Discord = require("discord.js");
 //var bot;
+const actions = require("./_StoredValues/actions_player.json");
+const locations = require("./_StoredValues/locations.json");
+const enemyNames = require("./_StoredValues/names_enemy.json");
+const rarity = require("./_StoredValues/rarity.json");
 
-function enemy() 
-{
+//Weapon Prototype
+let Weapon = require("./_Classes/Weapon.js");
+
+
+function Enemy() {
     this.name = enemyNames.Chicken;
     this.level = 1;
     this.maxHP = 10;
     this.currHP = this.maxHP;
     this.maxDmg = 2;
     this.minDmg = 1;
-    this.dropRate = 100;
+    this.dropRate = 50;
 }
 
-var actions = 
-            {   
-                "Idling":       1,
-                "Travelling":   2,
-                "Searching":    3,
-                "Battling":     4,
-                "Looting":      5,
-                "Returning":    6
-            };
-
-var locations = 
-            {
-                "Town":             0,
-                "Lumbridge":        1,
-                "Gnome Stronghold": 2,
-                "Varrock":          3,
-                "Taverly":          4,
-                "Camelot":          5,
-                "Wilderness":       6       
-            };
-
-var enemyNames = 
-            {
-                "Chicken":  0,
-                "Goblin":   1,
-                "Cow" :     2,
-                "Farmer":   3,
-                "Wizard":   4,
-                "Knight":   5,
-                "Bodyguard":6,
-                "Squire":   7,
-                "Prince":   8,
-                "King":     9,
-            };
-
-class player
-{
-    constructor(nickname, ID)
-    {
+class player {
+    constructor(nickname, ID) {
         this.id = ID;
         this.name = nickname;
 
@@ -68,34 +38,36 @@ class player
 
         this.currAction = actions.Idling;
         this.location = locations.Town;
-
-        this.currEnemy = new enemy();
+        this.currEnemy = new Enemy();
 
         this.playersTurn = true;
+
+        this.weapon_mainhand = new Weapon();
+        console.log(this.weapon_mainhand);
+
+        this.weapInvLimit = 50;
+        this.weapInventory = [];
     };
 
-    progress()
-    {
-        let msg = "";
-        switch(this.currAction)
-        {
+
+    progress() {
+        switch (this.currAction) {
             //Change to travelling
             case actions.Idling:
                 this.startTravelling();
-                msg = "**" + this.name + "** is travelling to " + this.getLocationName(this.location);
+                return ("**" + this.name + "** is travelling to " + this.getLocationName(this.location));
                 break;
             case actions.Travelling:
                 this.startSeaching();
-                msg += "**" +this.name + "** is searching around for Enemies";
-                break; 
+                return ("**" + this.name + "** is searching around for Enemies")
+                break;
             case actions.Searching:
                 this.startBattling();
-                msg = "<@" + this.id + "> Started a battle with **" + this.getEnemyName(this.currEnemy.name) + " [ Lv " + this.currEnemy.level + " ]**";
-//
-                break;  
+                return ("<@" + this.id + "> Started a battle with **" + this.getEnemyName(this.currEnemy.name) + " [ Lv " + this.currEnemy.level + " ]**");
+                //
+                break;
             case actions.Battling:
-                if (this.currEnemy.currHP === 0)
-                {
+                if (this.currEnemy.currHP === 0) {
                     //YOu killed the enemy yahoo
                     let expGained = this.currEnemy.maxHP * this.currEnemy.maxDmg * 0.5;
                     this.currExp += expGained;
@@ -103,58 +75,113 @@ class player
                     this.gold += goldGained;
 
                     this.startLooting();
-                    msg = "<@" + this.id + "> ***Won*** his battle against **" + this.getEnemyName(this.currEnemy.name) + " [lvl" +this.currEnemy.level + "]** "  + "and gained **[ " + expGained + "exp ][ " + goldGained + "gold ]** \n And then started looting the corpse..";
-                    
+                    return ("<@" + this.id + "> ***Won*** his battle against **" + this.getEnemyName(this.currEnemy.name) + " [lvl" + this.currEnemy.level + "]** " + "and gained **[ " + expGained + "exp ][ " + goldGained + "gold ]** \n And then started looting the corpse..");
+
                 }
-                else if (this.currHP === 0)
-                {
-                    msg = "<@" + this.id +"> ***Failed*** to kill his enemy...";
+                else if (this.currHP === 0) {
+
                     this.startReturning();
+                    return ("<@" + this.id + "> ***Failed*** to kill his enemy... what a newb");
                 }
-                else if (this.playersTurn)
-                {
-                    
+                else if (this.playersTurn) {
+
                     //attack enemy
                     this.attackEnemy();
                     this.playersTurn = false;
                 }
-                else
-                {
+                else {
                     //attack player
                     this.attackPlayer();
                     this.playersTurn = true;
                 }
-                break;  
+                break;
             case actions.Looting:
+                //If found loot
+                if (Math.random() * 100 <= this.currEnemy.dropRate) {
+                    if (this.weapInventory.length < this.weapInvLimit) {
+                        this.getLoot();
+                        return ("**" + this.name + "** found an item! Checking it out...");
+                    }
+                    else {
+                        this.dontGetLoot();
+                        return ("**" + this.name + "** found an item! But has a full inventory... [" + this.weapInvLimit + " / " + this.weapInvLimit + "]");
+                    }
+                }
+                else {
+                    this.dontGetLoot();
+                    return ("**" + this.name + "** couldn't find anything else...");
+                }
+                break;
+            case actions.FoundLoot:
+                let itemFound = new Weapon(this.level);
+                console.log(itemFound);
+                //Add to inventory
+                this.weapInventory.push(itemFound)
+
+                let rarityColour = "";
+                switch (itemFound.rarity) {
+                    case rarity.Common:
+                        rarityColour = "#d8d8d8";
+                        break;
+                    case rarity.Uncommon:
+                        rarityColour = "#95ce92";
+                        break;
+                    case rarity.Rare:
+                        rarityColour = "#62b4ef";
+                        break;
+                    case rarity.Epic:
+                        rarityColour = "#d063f2";
+                        break;
+                    case rarity.Legendary:
+                        rarityColour = "#e5ad5e";
+                        break;
+                    case rarity.Unique:
+                        rarityColour = "#ed4b4b";
+                        break;
+                    default:
+                        rarityColour = "#d8d8d8";
+                        break;
+                }
+
+                let pInfo = new Discord.RichEmbed()
+                    .setDescription("<@" + this.id + "> FOUND: ")
+                    .setColor(rarityColour)
+                    .setThumbnail("https://i.imgur.com/CFivIPM.png") //sword pic
+                    .addField("Name:  ", itemFound.getName())
+                    .addField("Level: ", itemFound.level)
+                    .addField("Rarity:", itemFound.getRarityName(itemFound.rarity))
+                    .addField("Damage:", itemFound.getDamageText());
+
+                this.dontGetLoot();
+                return pInfo;
+                break;
+            case actions.DidntFindLoot:
+
                 this.startReturning();
-                msg = "**" + this.name + "** is returning back to Town";
-                break;  
+                return ("**" + this.name + "** is returning back to Town");
+                break;
             case actions.Returning:
                 this.startIdling();
-                msg = "**" + this.name + "** is idling in the Town";
-                break;  
+                return ("**" + this.name + "** is idling in the Town");
+                break;
         }
-        return msg;
+
     };
 
-    checkLevelUp()
-    {
-        if (this.currExp >= this.nextLevelExp)
-        {
+    checkLevelUp() {
+        if (this.currExp >= this.nextLevelExp) {
             this.level++;
             this.nextLevelExp = Math.floor((this.level * 10) * (this.level * 10) * 0.4)
             return true;
         }
-        return false; 
-    };
-    
-    changeName(newName)
-    {
-         this.name = newName;
+        return false;
     };
 
-    getLocationName(index)
-    {
+    changeName(newName) {
+        this.name = newName;
+    };
+
+    getLocationName(index) {
         for (var state in locations) {
             if (locations[state] == index) {
                 return state;
@@ -162,8 +189,7 @@ class player
         }
     };
 
-    getActionName(index)
-    {
+    getActionName(index) {
         for (var state in actions) {
             if (actions[state] == index) {
                 return state;
@@ -171,8 +197,7 @@ class player
         }
     };
 
-    getEnemyName(index)
-    {
+    getEnemyName(index) {
         for (var state in enemyNames) {
             if (enemyNames[state] == index) {
                 return state;
@@ -181,20 +206,17 @@ class player
     };
 
     //events
-    startTravelling()
-    {
+    startTravelling() {
         let newLocationID = Math.floor(Math.random() * Object.keys(locations).length - 1) + 1;
         this.location = newLocationID;
         this.currAction = actions.Travelling;
     };
 
-    startSeaching()
-    {
+    startSeaching() {
         this.currAction = actions.Searching;
     };
 
-    startBattling()
-    {
+    startBattling() {
         //Make new enemy
         this.setupEnemy();
         //reset players stats
@@ -202,25 +224,29 @@ class player
         this.currAction = actions.Battling;
     };
 
-    startLooting()
-    {
+    startLooting() {
         this.currAction = actions.Looting;
     };
 
-    startReturning()
-    {
+    getLoot() {
+        this.currAction = actions.FoundLoot;
+    };
+
+    dontGetLoot() {
+        this.currAction = actions.DidntFindLoot;
+    };
+
+    startReturning() {
         this.currAction = actions.Returning;
     };
 
-    startIdling()
-    {
+    startIdling() {
         this.location = 0;
         this.currAction = actions.Idling;
     };
 
     //Battle functions
-    setupEnemy()
-    {
+    setupEnemy() {
         console.log("Setting up enemy..")
         //Random name
         this.currEnemy.name = Math.floor(Math.random() * Object.keys(enemyNames).length);
@@ -236,13 +262,13 @@ class player
 
         this.maxDmg = this.currEnemy.level * 0.5 * this.currEnemy.maxHP;
         this.currEnemy.minDmg = this.currEnemy.level;
-        
+
         //Will be random, or based on hp later
         this.currEnemy.dropRate = 100;
-    
+
     };
-    resetStats()
-    {
+
+    resetStats() {
         console.log("Resetting player stats..")
         //Reset hp
         this.currHP = this.maxHP;
@@ -250,34 +276,30 @@ class player
         //Reset dmg (buffed?)
     };
 
-    attackEnemy()
-    {
+    attackEnemy() {
         console.log("Attacking enemy..")
-        let damageDealt = (Math.floor(Math.random() * (this.maxDmg - this.minDmg + 1)))+ this.minDmg;
+        let damageDealt = (Math.floor(Math.random() * (this.weapon_mainhand.maxDmg - this.weapon_mainhand.minDmg + 1))) + this.weapon_mainhand.minDmg;
         console.log("Dealt " + damageDealt + " to enemy");
-        
+
         this.currEnemy.currHP -= damageDealt;
         console.log(this.currEnemy.currHP);
 
-        if(this.currEnemy.currHP <= 0)
-        {
+        if (this.currEnemy.currHP <= 0) {
             this.currEnemy.currHP = 0;
         }
     }
 
-    attackPlayer()
-    {
+    attackPlayer() {
         console.log("Attacking player..")
-        let damageDealt = (Math.floor(Math.random() * (this.currEnemy.maxDmg - this.currEnemy.minDmg + 1)))+ this.currEnemy.minDmg;
+        let damageDealt = (Math.floor(Math.random() * (this.currEnemy.maxDmg - this.currEnemy.minDmg + 1))) + this.currEnemy.minDmg;
         console.log("Enemy dealt " + damageDealt + " to player");
         this.currHP -= damageDealt;
 
-        if(this.currHP <= 0)
-        {
+        if (this.currHP <= 0) {
             this.currHP = 0;
         }
 
-        
+
     }
 }
 

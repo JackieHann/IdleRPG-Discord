@@ -1,0 +1,10 @@
+{
+    "Idling": 1,
+    "Travelling": 2,
+    "Searching": 3,
+    "Battling": 4,
+    "Looting": 5,
+    "FoundLoot": 6,
+    "DidntFindLoot": 7,
+    "Returning": 8
+}

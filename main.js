@@ -4,7 +4,7 @@ const Discord = require("discord.js");
 const FileSystem = require("fs");
 var player = require("./player.js");
 //create a new client
-const bot = new Discord.Client({disableEveryone: true});
+const bot = new Discord.Client({ disableEveryone: true });
 //Where we store the commands
 bot.commands = new Discord.Collection();
 
@@ -24,62 +24,62 @@ bot.commands = new Discord.Collection();
 
 
 //Read files from command folder
-FileSystem.readdir("./_Commands/", (err, files)=> {
+FileSystem.readdir("./_Commands/", (err, files) => {
     if (err) console.log(err);
 
     //Reads in files which have a .js extention :)
-    let jsfile = files.filter(f=> f.split(".").pop() === "js")
-    if(jsfile.length <= 0){
+    let jsfile = files.filter(f => f.split(".").pop() === "js")
+    if (jsfile.length <= 0) {
         console.log("Commands not found!");
         return;
     }
 
     //for every file we found
-    jsfile.forEach((f, i) =>{
+    jsfile.forEach((f, i) => {
         //Load it into bot commands
         let props = require(`./_Commands/${f}`);
         console.log(`${f} loaded..`);
         bot.commands.set(props.help.name, props);
     });
-}); 
+});
 
 //Login to the server
-bot.on("ready", async() =>
-{
+bot.on("ready", async () => {
     console.log(`${bot.user.username} is online!`);
     bot.user.setActivity("around with JS");
-    bot.channels.find("id", "455113318345211907").send("Oi Oi we back in business");
+
+    bot.channels.find("id", "455113318345211907")
+        .send("Oi Oi we back in business");
 });
 
 //Check for messages
-bot.on("message", async message =>
-{
+bot.on("message", async message => {
 
     //If the message came from the bot, or is a dm, dont do anything duh
     if (message.author.bot) return;
     if (message.channel.type === "dm") return;
 
-   // if(!coins[message.author.id])
+    // if(!coins[message.author.id])
     //{
-   //     coins[message.author.id] =
-   //     {
+    //     coins[message.author.id] =
+    //     {
     //        coins: 0
     //    };
-   // }
+    // }
 
-  //  let coinAmt = Math.floor(Math.random() * 15) + 1;
-   // let baseAmt = Math.floor(Math.random() * 15) + 1;
-   // console.log(coinAmt + ":" + baseAmt);
+    //  let coinAmt = Math.floor(Math.random() * 15) + 1;
+    // let baseAmt = Math.floor(Math.random() * 15) + 1;
+    // console.log(coinAmt + ":" + baseAmt);
 
-   // if (coinAmt === baseAmt){
-   //     coins[message.author.id] = {
-   //         coins: coins[message.author.id].coins + coinAmt
-   //     };
-//
-   //     FileSystem.writeFile("./_Json/coins.json", JSON.stringify(coins), (err)=> {
-   //         if (err) console.log(err);
-   //     })        
-   // }
+    // if (coinAmt === baseAmt){
+    //     coins[message.author.id] = {
+    //         coins: coins[message.author.id].coins + coinAmt
+    //     };
+    //
+    //     FileSystem.writeFile("./_Json/coins.json", JSON.stringify(coins), (err)=> {
+    //         if (err) console.log(err);
+    //     })        
+    // }
 
     let prefix = botconfig.prefix;                  //Prefix we are looking for is a exclamation
     let messageArr = message.content.split(" ");    //message is stored in an array separated by spaces
@@ -87,53 +87,49 @@ bot.on("message", async message =>
     let params = messageArr.slice(1);               //Params are anything after first bit of message
 
     let commandFile = bot.commands.get(command.slice(prefix.length));
-    if(commandFile)
-    {
+    if (commandFile) {
         commandFile.run(bot, message, params);
         return;
     }
-    else if(command.charAt(0) === prefix)
-    {
+    else if (command.charAt(0) === prefix) {
         message.channel.send("Invalid Command!");
         return;
     }
-    
+
 
 });
 
-setInterval(function()
-{
+setInterval(function () {
     action = Math.floor(Math.random() * 3);
-    
-    if (action != 0)
-    {
+
+    if (action != 0) {
         doSomething();
-    }  
+    }
 
-}, 3000);
+}, 1000);
 
-function savePlayerData(players)
-{
-            //Write player to file
-            FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err)=> {
-                if (err) console.log(err);
-            });
+function savePlayerData(players) {
+    //Write player to file
+    FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err) => {
+        if (err) console.log(err);
+    });
 };
 
-function doSomething()
-{
+function doSomething() {
     //All players
     playerData = JSON.parse(FileSystem.readFileSync("./_Json/players.json", "utf8"));
     playerArray = [];
 
     //Amount of players
     amountOfPlayers = 0;
-    for(var i in playerData)
-    {
+    for (var i in playerData) {
         playerArray.push(playerData[i]);
-        amountOfPlayers ++;
+        amountOfPlayers++;
     }
-    
+
+    if(amountOfPlayers === 0)
+        return;
+
     //Pick a random player
     let randomIndex = Math.floor(Math.random() * (amountOfPlayers));
     let playerID = playerArray[randomIndex].id;
@@ -145,13 +141,16 @@ function doSomething()
 
     let didWhat = thePlayer_.progress();
 
-    if(didWhat)
+    if (!didWhat) {
+        console.log("Didnt output");
+    }
+    else
         bot.channels.find("id", "455113318345211907").send(didWhat);
 
     //Check if player levelled up
     let levelledUp = thePlayer_.checkLevelUp();
     if (levelledUp === true)
-       bot.channels.find("id", "455113318345211907").send("<@" + playerID + "> is now Lvl: " + thePlayer_.level + ". Next Lvl in " + (thePlayer_.nextLevelExp - thePlayer_.currExp) + " exp.");
+        bot.channels.find("id", "455113318345211907").send("<@" + playerID + "> is now Lvl: " + thePlayer_.level + ". Next Lvl in " + (thePlayer_.nextLevelExp - thePlayer_.currExp) + " exp.");
 
     //Overwrite players info with new info
     playerData[playerID] = thePlayer_;
