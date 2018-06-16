@@ -7,6 +7,7 @@ const rarity = require("./_StoredValues/rarity.json");
 
 //Weapon Prototype
 let Weapon = require("./_Classes/Weapon.js");
+let Armour = require("./_Classes/Armour.js");
 
 
 function Enemy() {
@@ -42,11 +43,15 @@ class player {
 
         this.playersTurn = true;
 
-        this.weapon_mainhand = new Weapon();
-        console.log(this.weapon_mainhand);
+        this.weapon_mainhand = new Weapon();    //Mainhand
+        this.armour_helmet = new Armour(1, 0);  //Helmet
+        this.armour_body = new Armour(1, 1);    //Body
+        this.armour_legs = new Armour(1, 2);    //legs
+        this.armour_boots = new Armour(1, 3);   //Boots
 
-        this.weapInvLimit = 50;
+        this.weapInvLimit = 15;
         this.weapInventory = [];
+        this.armInventory = [];
     };
 
 
@@ -75,7 +80,7 @@ class player {
                     this.gold += goldGained;
 
                     this.startLooting();
-                    return ("<@" + this.id + "> ***Won*** his battle against **" + this.getEnemyName(this.currEnemy.name) + " [lvl" + this.currEnemy.level + "]** " + "and gained **[ " + expGained + "exp ][ " + goldGained + "gold ]** \n And then started looting the corpse..");
+                    return ("<@" + this.id + "> ***Won*** his battle against **" + this.getEnemyName(this.currEnemy.name) + " [ lvl " + this.currEnemy.level + " ]** " + "and gained **[ " + expGained + "exp ][ " + goldGained + "gold ]** \n And then started looting the corpse..");
 
                 }
                 else if (this.currHP === 0) {
@@ -98,7 +103,7 @@ class player {
             case actions.Looting:
                 //If found loot
                 if (Math.random() * 100 <= this.currEnemy.dropRate) {
-                    if (this.weapInventory.length < this.weapInvLimit) {
+                    if (this.weapInventory.length + this.armInventory.length < this.weapInvLimit) {
                         this.getLoot();
                         return ("**" + this.name + "** found an item! Checking it out...");
                     }
@@ -113,47 +118,140 @@ class player {
                 }
                 break;
             case actions.FoundLoot:
-                let itemFound = new Weapon(this.level);
-                console.log(itemFound);
-                //Add to inventory
-                this.weapInventory.push(itemFound)
 
-                let rarityColour = "";
-                switch (itemFound.rarity) {
-                    case rarity.Common:
-                        rarityColour = "#d8d8d8";
-                        break;
-                    case rarity.Uncommon:
-                        rarityColour = "#95ce92";
-                        break;
-                    case rarity.Rare:
-                        rarityColour = "#62b4ef";
-                        break;
-                    case rarity.Epic:
-                        rarityColour = "#d063f2";
-                        break;
-                    case rarity.Legendary:
-                        rarityColour = "#e5ad5e";
-                        break;
-                    case rarity.Unique:
-                        rarityColour = "#ed4b4b";
-                        break;
-                    default:
-                        rarityColour = "#d8d8d8";
-                        break;
+                let chance = Math.floor(Math.random() * 2);
+
+                if (chance === 0) {
+                    let itemFound = new Armour(this.level);
+                    console.log(itemFound);
+                    //Add to inventory
+                    this.armInventory.push(itemFound)
+
+                    let rarityColour = "";
+                    switch (itemFound.rarity) {
+                        case rarity.Common:
+                            rarityColour = "#d8d8d8";
+                            break;
+                        case rarity.Uncommon:
+                            rarityColour = "#95ce92";
+                            break;
+                        case rarity.Rare:
+                            rarityColour = "#62b4ef";
+                            break;
+                        case rarity.Epic:
+                            rarityColour = "#d063f2";
+                            break;
+                        case rarity.Legendary:
+                            rarityColour = "#e5ad5e";
+                            break;
+                        case rarity.Unique:
+                            rarityColour = "#ed4b4b";
+                            break;
+                        default:
+                            rarityColour = "#d8d8d8";
+                            break;
+                    }
+
+                    let itemURL = "";
+                    switch (itemFound.type) {
+                        case 0: //HELM
+                            itemURL = "https://cdn2.iconfinder.com/data/icons/sweden-cartoon/512/a1793-512.png";
+                            break;
+                        case 1: //BODY
+                            itemURL = "https://cdn.pixabay.com/photo/2016/03/31/22/35/armor-1297111_960_720.png";
+                            break;
+                        case 2: //LEGS
+                            itemURL = "https://images-na.ssl-images-amazon.com/images/I/61MFRXwc55L._SL1000_.jpg";
+                            break;
+                        case 3://BOOTS
+                            itemURL = "https://www.biblecartoons.co.uk/images/678.jpg";
+                            break;
+                        default:
+                        itemURL = "https://cdn2.iconfinder.com/data/icons/sweden-cartoon/512/a1793-512.png"
+                            break;
+                    }
+
+                    let pInfo = new Discord.RichEmbed()
+                        .setDescription("<@" + this.id + "> FOUND: ")
+                        .setColor(rarityColour)
+                        .setThumbnail(itemURL) //sword pic
+                        .addField("Name:  ", itemFound.getName())
+                        .addField("Level: ", itemFound.level)
+                        .addField("Rarity:", itemFound.getRarityName(itemFound.rarity))
+
+                    this.dontGetLoot();
+                    return pInfo;
+                }
+                else {
+                    let itemFound = new Weapon(this.level);
+                    console.log(itemFound);
+                    //Add to inventory
+                    this.weapInventory.push(itemFound)
+
+                    let rarityColour = "";
+                    switch (itemFound.rarity) {
+                        case rarity.Common:
+                            rarityColour = "#d8d8d8";
+                            break;
+                        case rarity.Uncommon:
+                            rarityColour = "#95ce92";
+                            break;
+                        case rarity.Rare:
+                            rarityColour = "#62b4ef";
+                            break;
+                        case rarity.Epic:
+                            rarityColour = "#d063f2";
+                            break;
+                        case rarity.Legendary:
+                            rarityColour = "#e5ad5e";
+                            break;
+                        case rarity.Unique:
+                            rarityColour = "#ed4b4b";
+                            break;
+                        default:
+                            rarityColour = "#d8d8d8";
+                            break;
+                    }
+
+                    let itemURL = "";
+                    switch (itemFound.type) {
+                        case 0: //DAGGER
+                            itemURL = "https://www.fg-a.com/weapons/japanese-knife-2-2018.png";
+                            break;
+                        case 1: //SWORD
+                            itemURL = "http://www.medievalcollectibles.com/images/Product/large/MA-LY001S.png";
+                            break;
+                        case 2: //GLAIVE
+                            itemURL = "http://www.medievalcollectibles.com/images/Product/large/MCI-2877.png";
+                            break;
+                        case 3://WAND
+                            itemURL = "https://4vector.com/i/free-vector-magic-wand_101665_Magic_Wand.png";
+                            break;
+                        case 4://WHIP
+                        itemURL = "http://img4.wikia.nocookie.net/__cb20140220203204/2007scape/images/3/30/Abyssal_whip_detail.png";
+                            break;
+                        case 5://STAFF
+                            itemURL = "https://vignette.wikia.nocookie.net/club-penguin-rewritten/images/c/cf/CrystalStaff.png/revision/latest?cbu003d20170504135354";
+                            break;
+                        default:
+                        itemURL = "https://cdn2.iconfinder.com/data/icons/sweden-cartoon/512/a1793-512.png"
+                            break;
+                    }
+
+                    let pInfo = new Discord.RichEmbed()
+                        .setDescription("<@" + this.id + "> FOUND: ")
+                        .setColor(rarityColour)
+                        .setThumbnail(itemURL) //sword pic
+                        .addField("Name:  ", itemFound.getName())
+                        .addField("Level: ", itemFound.level)
+                        .addField("Rarity:", itemFound.getRarityName(itemFound.rarity))
+                        .addField("Damage:", itemFound.getDamageText());
+
+                    this.dontGetLoot();
+                    return pInfo;
                 }
 
-                let pInfo = new Discord.RichEmbed()
-                    .setDescription("<@" + this.id + "> FOUND: ")
-                    .setColor(rarityColour)
-                    .setThumbnail("https://i.imgur.com/CFivIPM.png") //sword pic
-                    .addField("Name:  ", itemFound.getName())
-                    .addField("Level: ", itemFound.level)
-                    .addField("Rarity:", itemFound.getRarityName(itemFound.rarity))
-                    .addField("Damage:", itemFound.getDamageText());
 
-                this.dontGetLoot();
-                return pInfo;
                 break;
             case actions.DidntFindLoot:
 

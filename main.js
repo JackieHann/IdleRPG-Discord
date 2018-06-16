@@ -3,6 +3,7 @@ const botconfig = require("./botconfig.json");
 const Discord = require("discord.js");
 const FileSystem = require("fs");
 var player = require("./player.js");
+var Weapon = require("./_Classes/Weapon.js");
 //create a new client
 const bot = new Discord.Client({ disableEveryone: true });
 //Where we store the commands
@@ -59,28 +60,6 @@ bot.on("message", async message => {
     if (message.author.bot) return;
     if (message.channel.type === "dm") return;
 
-    // if(!coins[message.author.id])
-    //{
-    //     coins[message.author.id] =
-    //     {
-    //        coins: 0
-    //    };
-    // }
-
-    //  let coinAmt = Math.floor(Math.random() * 15) + 1;
-    // let baseAmt = Math.floor(Math.random() * 15) + 1;
-    // console.log(coinAmt + ":" + baseAmt);
-
-    // if (coinAmt === baseAmt){
-    //     coins[message.author.id] = {
-    //         coins: coins[message.author.id].coins + coinAmt
-    //     };
-    //
-    //     FileSystem.writeFile("./_Json/coins.json", JSON.stringify(coins), (err)=> {
-    //         if (err) console.log(err);
-    //     })        
-    // }
-
     let prefix = botconfig.prefix;                  //Prefix we are looking for is a exclamation
     let messageArr = message.content.split(" ");    //message is stored in an array separated by spaces
     let command = messageArr[0];                    //Command is the fist bit of the message
@@ -107,6 +86,89 @@ setInterval(function () {
     }
 
 }, 1000);
+
+//Shop every 3 min
+setInterval(function () {
+    let shopChannel = bot.channels.find("id", "455847271544651788");
+
+    shopChannel.bulkDelete(1).then(()=>
+    {
+        console.log("Cleared Shop Inventory");
+        shopText = refreshShop();
+        shopChannel.send(shopText)
+
+    });
+}, 300000);
+
+function refreshShop(){
+
+    playerData = JSON.parse(FileSystem.readFileSync("./_Json/players.json", "utf8"));
+    shopArray = [];
+
+    let playerCount = 0;
+    let totalLevels = 0;
+
+    for(var i in playerData)
+    {
+        totalLevels += playerData[i].level;
+        playerCount++; 
+    }
+
+    let levelOfShop = Math.floor(totalLevels / playerCount);
+
+    for(var i = 0; i < 8; i++)
+    {
+        shopArray.push(new Weapon(levelOfShop));
+        
+    }
+    console.log(shopArray);
+
+    //Write player to file
+    FileSystem.writeFile("./_Json/shop.json", JSON.stringify(shopArray), (err) => {
+        if (err) console.log(err);
+    });
+
+    return (showShop(shopArray));
+};
+
+function showShop(shopArray)
+{
+
+    let shopText = "```{ Command: }-{        Name         }--{ Rarity }--{ Damage }--{Price}-----\n";
+
+    let rarityGap = 25;
+    let damageGap = 10;
+    let sellGap = 10;
+
+    for(var i in shopArray)
+            {
+                
+                item = Object.setPrototypeOf(shopArray[i], Weapon.prototype);
+                let raritySpaces = new Array(rarityGap - item.getName().length + 1).join(" ");
+                let damageSpaces = new Array(damageGap - raritySpaces -  item.getRarityName(item.rarity).length + 1).join(" ");
+
+                let index = "\n< !buy   " + i + " > ";
+                if(i.toString().length > 1)
+                    index = "\n< !buy   " + i + "> ";
+
+                let spacesTakeAway = 0;
+                if(item.getDamageText().length > 6)
+                    for(var i = 0; i < (item.getDamageText().length - 6); i++)
+                    {
+                        spacesTakeAway++;
+                    }
+
+                let sellSpaces = new Array(sellGap - damageSpaces - spacesTakeAway - (item.getSellPrice() * 5).toString().length + 1).join(" ");
+
+                shopText += (index + item.getName() + raritySpaces + "[" + item.getRarityName(item.rarity) + "]" + damageSpaces + item.getDamageText() + sellSpaces  + (item.getSellPrice()* 5) + "g\n");
+            
+            }
+            
+        shopText += "---------------------------------------------------------------------------```";
+
+        return shopText;
+};
+
 
 function savePlayerData(players) {
     //Write player to file

@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const FileSystem = require("fs");
 var player = require("./../player.js");
 var Weapon = require("./../_Classes/weapon.js")
+var Armour = require("./../_Classes/armour.js")
 
 module.exports.run = async (bot, message, params) => {
 
@@ -16,8 +17,17 @@ module.exports.run = async (bot, message, params) => {
         invText += "--<Equipped>--------\n";
 
 
-        item = Object.setPrototypeOf(character.weapon_mainhand, Weapon.prototype);
-        invText += ("< 0 > Weapon: " + item.getName() + " " + item.getDamageText() + "\n");
+        let weap = Object.setPrototypeOf(character.weapon_mainhand, Weapon.prototype);
+        let helm = Object.setPrototypeOf(character.armour_helmet, Armour.prototype);
+        let body = Object.setPrototypeOf(character.armour_body, Armour.prototype);
+        let legs = Object.setPrototypeOf(character.armour_legs, Armour.prototype);
+        let boots = Object.setPrototypeOf(character.armour_boots, Armour.prototype);
+
+        invText += ("< 0 > Weapon: " + weap.getName() + " " + weap.getDamageText() + "\n");
+        invText += ("< 1 > Helmet: " + helm.getName() + " \n");
+        invText += ("< 2 > Body  : " + body.getName() + " \n");
+        invText += ("< 3 > Legs  : " + legs.getName() + " \n");
+        invText += ("< 4 > Boots : " + boots.getName() + " \n");
 
         invText += "-------------------";
     }

@@ -1,7 +1,8 @@
 const Discord = require("discord.js");
 const FileSystem = require("fs");
 var player = require("./../player.js");
-var Weapon = require("./../_Classes/weapon.js")
+var Weapon = require("./../_Classes/weapon.js");
+var Armour = require("./../_Classes/armour.js")
 
 
 module.exports.run = async (bot, message, params) => {
@@ -15,21 +16,86 @@ module.exports.run = async (bot, message, params) => {
 
         if(character.weapInventory[parseInt(params[0])])
         {
-            console.log("SWITCH WEAPS");
-            let newWeap = Object.setPrototypeOf(character.weapInventory[parseInt(params[0])], Weapon.prototype);
-            let oldWeap = Object.setPrototypeOf(character.weapon_mainhand, Weapon.prototype);
+            //Weapon to sell
+            let sellWeap = Object.setPrototypeOf(character.weapInventory[parseInt(params[0])], Weapon.prototype);
             
-            character.weapInventory[parseInt(params[0])] = oldWeap;
-            character.weapon_mainhand = newWeap;
+            //Remove weapon from inventory
+            let newInv = [];
+            for (var i in character.weapInventory)
+            {
+                if (i != params[0])
+                    newInv.push(character.weapInventory[i]);
+            }
 
+            character.gold += sellWeap.getSellPrice();
+            //Overwrite inventory
+            character.weapInventory = newInv;
             players[message.author.id] = character;
+
             //Write player to file
             FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err) => {
                 if (err) console.log(err);
             });
 
-            return message.channel.send("Equipped Item: " + newWeap.getName());
+            return message.channel.send("Sold Item: " + sellWeap.getName() + " for " + sellWeap.getSellPrice() + "g");
 
+        }
+        else if(character.armInventory[parseInt(params[0]) - (parseInt(character.weapInventory.length))])
+        {
+            let indexToDelete = parseInt(params[0]) - (parseInt(character.weapInventory.length));
+            let sellArm = Object.setPrototypeOf(character.armInventory[indexToDelete], Armour.prototype);
+
+            let newInv = [];
+            for (var i in character.armInventory)
+            {
+                if (i != indexToDelete)
+                    newInv.push(character.armInventory[i]);
+            }
+
+            character.gold += sellArm.getSellPrice();
+
+            //Overwrite inventory
+            character.armInventory = newInv;
+            players[message.author.id] = character;
+
+            //Write player to file
+            FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err) => {
+                if (err) console.log(err);
+            });
+
+            return message.channel.send("Sold Item: " + sellArm.getName() + " for " + sellArm.getSellPrice() + "g");
+
+        }
+        else if (params[0] === "all")
+        {
+            let numItems = 0;
+            let totGold = 0;
+
+            for (var i in character.weapInventory)
+            {
+                let sellWeap = Object.setPrototypeOf(character.weapInventory[i], Weapon.prototype);
+                numItems ++;
+                totGold += sellWeap.getSellPrice();
+            }
+            for (var j in character.armInventory)
+            {
+                let sellArm = Object.setPrototypeOf(character.armInventory[j], Armour.prototype);
+                numItems ++;
+                totGold += sellArm.getSellPrice();
+            }
+
+            character.gold += totGold;
+            character.weapInventory = [];
+            character.armInventory = [];
+
+            players[message.author.id] = character;
+
+            //Write player to file
+            FileSystem.writeFile("./_Json/players.json", JSON.stringify(players), (err) => {
+                if (err) console.log(err);
+            });
+
+            return message.channel.send("Sold '" + numItems + "' items for a total of " + totGold + " gold.")
         }
         else
         {

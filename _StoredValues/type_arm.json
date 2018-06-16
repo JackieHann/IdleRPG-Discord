@@ -1,0 +1,6 @@
+{
+    "Helmet": 0,
+    "Body": 1,
+    "Legs": 2,
+    "Boots": 3
+}
